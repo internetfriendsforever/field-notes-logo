@@ -1,0 +1,23 @@
+<title>Field Notes interactive logo</title>
+
+<pre id="console"><pre>
+
+<script>
+  const console = document.getElementById('console')
+
+  function log (string) {
+    console.innerHTML = [string, console.innerHTML].join('')
+  }
+
+  function writeNewLine () {
+    log('\n')
+    setTimeout(writeVoid, 250)
+  }
+
+  function writeVoid () {
+    log('VOID')
+    setTimeout(writeNewLine, 250)
+  }
+
+  writeVoid()
+</script>
