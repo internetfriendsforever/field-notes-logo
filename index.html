@@ -17,11 +17,9 @@
 
 <div class="container">
   <svg id="logo" version='1.1' viewBox='0 0 640 480'>
-    <line class='mouse' stroke='black' x1='0' y1='0' x2='0' y2='0' />
-
     <g class='letters'>
      	<g id='F'>
-     		<polygon transform='translate(10, 10) rotate(-10)' points='143.4,126.3 143.4,131.8 148.9,131.8 197,83.7 197,78.2 191.5,78.2 143.4,126.3'/>
+     		<polygon points='143.4,126.3 143.4,131.8 148.9,131.8 197,83.7 197,78.2 191.5,78.2 143.4,126.3'/>
      		<polygon points='88.9,140.1 142.6,140.1 142.6,132.6 88.9,132.6 88.9,140.1'/>
      		<polygon points='143.4,132.6 143.4,186.3 150.8,186.3 150.8,140.1 197,140.1 197,132.6 143.4,132.6'/>
      	</g>
@@ -77,6 +75,9 @@
     			530.2,293.7'/>
     	</g>
     </g>
+
+    <line class='mouse' stroke='black' x1='0' y1='0' x2='0' y2='0' />
+    <circle class='debug' cx='0' cy='0' r='2' fill='white' />
   </svg>
 </div>
 
@@ -93,9 +94,15 @@
 
   const shapes = polygons.map(polygon => {
     const relativeMatrix = getMatrixFromElement(letters, polygon)
+    const points = polygon.points
+    const modified = Array.prototype.slice.call(points, 0, -1)
+    const string = modified.map(point => [point.x, point.y].join()).join(' ')
+
+    polygon.setAttribute('points', string)
 
     return {
       polygon: polygon,
+      centroid: getPolygonCentroid(polygon),
       lines: Array(polygon.points.length).fill().map((v, i) => {
         const p1 = polygon.points[i].matrixTransform(relativeMatrix)
         const p2 = polygon.points[(i + 1) % polygon.points.length].matrixTransform(relativeMatrix)
@@ -137,6 +144,37 @@
       })
     ))
   })
+
+  function tick (time = 0) {
+    const rotation = time / 10
+    const shape = shapes[0]
+    const transform = `rotate(${rotation} ${shape.centroid.x} ${shape.centroid.y})`
+
+    shape.polygon.setAttribute('transform', transform)
+
+    logo.querySelector('.debug').setAttribute('cx', shape.centroid.x)
+    logo.querySelector('.debug').setAttribute('cy', shape.centroid.y)
+
+    window.requestAnimationFrame(tick)
+  }
+
+  tick()
+
+  function sum (arr) {
+    return arr.reduce((acc, val) => acc + val, 0)
+  }
+
+  function average (arr) {
+    return sum(arr) / arr.length
+  }
+
+  function getPolygonCentroid (polygon) {
+    const centroid = logo.createSVGPoint()
+    const points = polygon.points
+    centroid.x = average(Array.prototype.map.call(points, point => point.x))
+    centroid.y = average(Array.prototype.map.call(points, point => point.y))
+    return centroid
+  }
 
   function getMatrixFromElement (from, to) {
     return from.getCTM().inverse().multiply(to.getCTM())
