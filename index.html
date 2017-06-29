@@ -78,7 +78,7 @@
   </svg>
 </div>
 
-<script src="lineMath.js"></script>
+<script src="math.js"></script>
 
 <script>
   NodeList.prototype.map = Array.prototype.map
@@ -98,6 +98,7 @@
     return {
       polygon: polygon,
       centroid: getPolygonCentroid(polygon),
+      resting: true,
       angle: 0,
       position: { x: 0, y: 0 },
       velocity: {
@@ -107,57 +108,37 @@
     }
   })
 
-  const prev = logo.createSVGPoint()
-  const current = logo.createSVGPoint()
-
-  // TODO: Change to render loop:
-  logo.addEventListener('mousemove', e => {
-    current.x = e.clientX
-    current.y = e.clientY
-
-    const p1 = prev.matrixTransform(logo.getScreenCTM().inverse())
-    const p2 = current.matrixTransform(logo.getScreenCTM().inverse())
-
-    const mouseLine = [[p1.x, p1.y], [p2.x, p2.y]]
-
-    prev.x = current.x
-    prev.y = current.y
-
-    shapes.forEach(shape => {
-      const mouseLength = lineLength(mouseLine)
-      const mouseAngle = lineAngle(mouseLine)
-      const polygon = shape.polygon
-      const points = polygon.points
-      const relativeMatrix = getMatrixFromElement(letters, polygon)
-
-      Array(points.length).fill().forEach((v, i) => {
-        const p1 = points[i].matrixTransform(relativeMatrix)
-        const p2 = points[(i + 1) % points.length].matrixTransform(relativeMatrix)
-        const shapeLine = [[p1.x, p1.y], [p2.x, p2.y]]
-
-        if (linesIntersect(mouseLine, shapeLine)) {
-          shape.polygon.style.fill = `hsl(${Math.random() * 255}, 100%, 50%)`
-          shape.velocity.angle += mouseLength * 0.5
-          shape.velocity.position.x += Math.cos(mouseAngle) * mouseLength * 0.5
-          shape.velocity.position.y += Math.sin(mouseAngle) * mouseLength * 0.5
-        }
-      })
-    })
-  })
-
   function update (time) {
     shapes.forEach(shape => {
-      shape.angle += shape.velocity.angle
-      shape.position.x += shape.velocity.position.x
-      shape.position.y += shape.velocity.position.y
+      if (!shape.resting) {
+        const { velocity } = shape
 
-      shape.angle *= 0.92
-      shape.position.x *= 0.92
-      shape.position.y *= 0.92
+        const rest = sum([
+          velocity.angle,
+          velocity.position.x,
+          velocity.position.y
+        ].map(v => Math.abs(v))) < 0.1
 
-      shape.velocity.angle *= 0.99
-      shape.velocity.position.x *= 0.99
-      shape.velocity.position.y *= 0.99
+        if (!rest) {
+          shape.angle += velocity.angle
+          shape.position.x += velocity.position.x
+          shape.position.y += velocity.position.y
+
+          shape.angle *= 0.92
+          shape.position.x *= 0.92
+          shape.position.y *= 0.92
+
+          velocity.angle *= 0.99
+          velocity.position.x *= 0.99
+          velocity.position.y *= 0.99
+        } else {
+          shape.angle = 0
+          shape.position.x = 0
+          shape.position.y = 0
+          shape.resting = true
+          shape.polygon.style.fill = `black`
+        }
+      }
     })
   }
 
@@ -174,35 +155,71 @@
     })
   }
 
-  function tick (time = 0) {
-    update(time)
-    render(time)
-    window.requestAnimationFrame(tick)
+  const onMouseMove = (() => {
+    const previous = logo.createSVGPoint()
+    const current = logo.createSVGPoint()
+
+    previous.x = null
+    previous.y = null
+
+    return e => {
+      current.x = e.clientX
+      current.y = e.clientY
+
+      if (previous.x !== 0) {
+        const a = previous.matrixTransform(logo.getScreenCTM().inverse())
+        const b = current.matrixTransform(logo.getScreenCTM().inverse())
+        const mouseLine = [[a.x, a.y], [b.x, b.y]]
+
+        shapes.forEach(shape => {
+          const mouseLength = lineLength(mouseLine)
+          const mouseAngle = lineAngle(mouseLine)
+          const polygon = shape.polygon
+          const points = polygon.points
+          const relativeMatrix = getMatrixFromElement(letters, polygon)
+
+          Array(points.length).fill().forEach((v, i) => {
+            const a = points[i].matrixTransform(relativeMatrix)
+            const b = points[(i + 1) % points.length].matrixTransform(relativeMatrix)
+
+            const shapeLine = [[a.x, a.y], [b.x, b.y]]
+
+            if (linesIntersect(mouseLine, shapeLine)) {
+              shape.polygon.style.fill = `hsl(${Math.random() * 255}, 100%, 50%)`
+              shape.velocity.angle += mouseLength * 0.5
+              shape.velocity.position.x += Math.cos(mouseAngle) * mouseLength * 0.5
+              shape.velocity.position.y += Math.sin(mouseAngle) * mouseLength * 0.5
+              shape.resting = false
+              start()
+            }
+          })
+        })
+      }
+
+      previous.x = current.x
+      previous.y = current.y
+    }
+  })()
+
+  let ticking = false
+
+  function tick () {
+    ticking = true
+
+    if (shapes.some(shape => !shape.resting)) {
+      update()
+      render()
+      window.requestAnimationFrame(tick)
+    } else {
+      ticking = false
+    }
   }
 
-  tick()
-
-  function sum (arr) {
-    return arr.reduce((acc, val) => acc + val, 0)
+  function start () {
+    if (!ticking) {
+      tick()
+    }
   }
 
-  function average (arr) {
-    return sum(arr) / arr.length
-  }
-
-  function distance (a, b) {
-    return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
-  }
-
-  function getPolygonCentroid (polygon) {
-    const centroid = logo.createSVGPoint()
-    const points = polygon.points
-    centroid.x = average(Array.prototype.map.call(points, point => point.x))
-    centroid.y = average(Array.prototype.map.call(points, point => point.y))
-    return centroid
-  }
-
-  function getMatrixFromElement (from, to) {
-    return from.getCTM().inverse().multiply(to.getCTM())
-  }
+  window.addEventListener('mousemove', onMouseMove)
 </script>

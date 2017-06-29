@@ -1,3 +1,27 @@
+function sum (arr) {
+  return arr.reduce((acc, val) => acc + val, 0)
+}
+
+function average (arr) {
+  return sum(arr) / arr.length
+}
+
+function distance (a, b) {
+  return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
+}
+
+function getPolygonCentroid (polygon) {
+  const centroid = logo.createSVGPoint()
+  const points = polygon.points
+  centroid.x = average(Array.prototype.map.call(points, point => point.x))
+  centroid.y = average(Array.prototype.map.call(points, point => point.y))
+  return centroid
+}
+
+function getMatrixFromElement (from, to) {
+  return from.getCTM().inverse().multiply(to.getCTM())
+}
+
 function lineLength ([[x1, y1], [x2, y2]]) {
   return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
 }
