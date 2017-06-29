@@ -81,6 +81,17 @@
 <script src="math.js"></script>
 
 <script>
+  const context = new window.AudioContext()
+  const convolver = context.createConvolver()
+
+  convolver.connect(context.destination)
+
+  fetch('echo/SteinmanHall-AAC File.m4a')
+    .then(res => res.arrayBuffer())
+    .then(data => context.decodeAudioData(data, buffer => {
+      convolver.buffer = buffer
+    }))
+
   NodeList.prototype.map = Array.prototype.map
   NodeList.prototype.forEach = Array.prototype.forEach
 
@@ -92,6 +103,42 @@
     const points = polygon.points
     const modified = Array.prototype.slice.call(points, 0, -1)
     const string = modified.map(point => [point.x, point.y].join()).join(' ')
+    const oscillator1 = context.createOscillator()
+    const oscillator2 = context.createOscillator()
+    const gain = context.createGain()
+    const panner = context.createStereoPanner()
+
+    const frequencies = [
+      440,
+      493.8833012561241,
+      554.3652619537442,
+      587.3295358348151,
+      659.2551138257398,
+      739.9888454232688,
+      783.9908719634985
+    ]
+
+    const hues = [0, 60, 240]
+    const type = ~~(Math.random() * 4)
+    // const frequency = frequencies[type]
+    const frequency = 440 + Math.pow(type * 10, 2)
+    const hue = hues[type % hues.length]
+
+    oscillator1.type = 'sine'
+    oscillator1.frequency.value = frequency
+    oscillator1.connect(gain)
+    oscillator1.start()
+
+    oscillator2.type = 'sine'
+    oscillator2.frequency.value = frequency / 2
+    oscillator2.connect(gain)
+    oscillator2.start()
+
+    gain.connect(panner)
+    gain.gain.value = 0.0
+
+    panner.pan.value = Math.random()
+    panner.connect(convolver)
 
     polygon.setAttribute('points', string)
 
@@ -99,27 +146,43 @@
       polygon: polygon,
       centroid: getPolygonCentroid(polygon),
       resting: true,
+      type: type,
+      hue: hue,
       angle: 0,
+      lastCollision: 0,
       position: { x: 0, y: 0 },
       velocity: {
         angle: 0,
         position: { x: 0, y: 0 }
+      },
+      audio: {
+        gain
       }
     }
   })
+
+  function getShapeMovement (shape) {
+    return sum([
+      shape.velocity.angle,
+      shape.velocity.position.x,
+      shape.velocity.position.y
+    ].map(v => Math.abs(v)))
+  }
 
   function update (time) {
     shapes.forEach(shape => {
       if (!shape.resting) {
         const { velocity } = shape
 
-        const rest = sum([
-          velocity.angle,
-          velocity.position.x,
-          velocity.position.y
-        ].map(v => Math.abs(v))) < 0.1
+        const movement = getShapeMovement(shape)
+        const rest = movement < 0.1
+
+        const gain = shape.audio.gain.gain.value * 0.5
+
+        shape.audio.gain.gain.value = gain
 
         if (!rest) {
+          shape.polygon.style.fill = `hsl(${shape.hue}, 100%, ${Math.min(gain * 10000, 50)}%)`
           shape.angle += velocity.angle
           shape.position.x += velocity.position.x
           shape.position.y += velocity.position.y
@@ -178,6 +241,10 @@
           const points = polygon.points
           const relativeMatrix = getMatrixFromElement(letters, polygon)
 
+          if (Date.now() - shape.lastCollision < 30) {
+            return
+          }
+
           Array(points.length).fill().forEach((v, i) => {
             const a = points[i].matrixTransform(relativeMatrix)
             const b = points[(i + 1) % points.length].matrixTransform(relativeMatrix)
@@ -185,11 +252,14 @@
             const shapeLine = [[a.x, a.y], [b.x, b.y]]
 
             if (linesIntersect(mouseLine, shapeLine)) {
-              shape.polygon.style.fill = `hsl(${Math.random() * 255}, 100%, 50%)`
-              shape.velocity.angle += mouseLength * 0.5
-              shape.velocity.position.x += Math.cos(mouseAngle) * mouseLength * 0.5
-              shape.velocity.position.y += Math.sin(mouseAngle) * mouseLength * 0.5
+              const force = Math.pow(mouseLength / 2, 2) / 10
+
+              shape.lastCollision = Date.now()
+              shape.velocity.angle += force
+              shape.velocity.position.x += Math.cos(mouseAngle) * force
+              shape.velocity.position.y += Math.sin(mouseAngle) * force
               shape.resting = false
+              shape.audio.gain.gain.value = Math.min(1, getShapeMovement(shape) / 10) * 0.2
               start()
             }
           })
