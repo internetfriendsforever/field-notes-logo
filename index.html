@@ -187,13 +187,13 @@
           shape.position.x += velocity.position.x
           shape.position.y += velocity.position.y
 
-          shape.angle *= 0.92
-          shape.position.x *= 0.92
-          shape.position.y *= 0.92
+          shape.angle *= 0.9
+          shape.position.x *= 0.9
+          shape.position.y *= 0.9
 
-          velocity.angle *= 0.99
-          velocity.position.x *= 0.99
-          velocity.position.y *= 0.99
+          velocity.angle *= 0.995
+          velocity.position.x *= 0.995
+          velocity.position.y *= 0.995
         } else {
           shape.angle = 0
           shape.position.x = 0
@@ -241,7 +241,7 @@
           const points = polygon.points
           const relativeMatrix = getMatrixFromElement(letters, polygon)
 
-          if (Date.now() - shape.lastCollision < 30) {
+          if (Date.now() - shape.lastCollision < 50) {
             return
           }
 
@@ -252,7 +252,7 @@
             const shapeLine = [[a.x, a.y], [b.x, b.y]]
 
             if (linesIntersect(mouseLine, shapeLine)) {
-              const force = Math.pow(mouseLength / 2, 2) / 10
+              const force = Math.pow(mouseLength, 1.2) / 5
 
               shape.lastCollision = Date.now()
               shape.velocity.angle += force
