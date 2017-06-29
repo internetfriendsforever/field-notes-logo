@@ -93,7 +93,7 @@
   const letters = logo.querySelector('.letters')
 
   const shapes = polygons.map(polygon => {
-    const relativeMatrix = getMatrixFromElement(letters, polygon)
+    // const relativeMatrix = getMatrixFromElement(letters, polygon)
     const points = polygon.points
     const modified = Array.prototype.slice.call(points, 0, -1)
     const string = modified.map(point => [point.x, point.y].join()).join(' ')
@@ -103,19 +103,13 @@
     return {
       polygon: polygon,
       centroid: getPolygonCentroid(polygon),
-      lines: Array(polygon.points.length).fill().map((v, i) => {
-        const p1 = polygon.points[i].matrixTransform(relativeMatrix)
-        const p2 = polygon.points[(i + 1) % polygon.points.length].matrixTransform(relativeMatrix)
-        return [[p1.x, p1.y], [p2.x, p2.y]]
-      })
+      rotation: 0,
+      angularMomentum: 0
     }
   })
 
   const prev = logo.createSVGPoint()
   const current = logo.createSVGPoint()
-
-  // console.log(logo.querySelector('#f polygon').getCTM())
-  // console.log(logo.querySelector('#i polygon').getCTM())
 
   // TODO: Change to render loop:
   logo.addEventListener('mousemove', e => {
@@ -135,26 +129,43 @@
     prev.x = current.x
     prev.y = current.y
 
-    shapes.forEach(shape => (
-      shape.lines.forEach(shapeLine => {
-        if (linesIntersect(mouseLine, shapeLine)) {
-          console.log(lineLength(mouseLine))
-          shape.polygon.style.fill = `hsl(${Math.random() * 255}, 100%, 50%)`
-        }
-      })
-    ))
+    shapes.forEach(shape => {
+      if (distance(shape.centroid, p2) < 100) {
+        const polygon = shape.polygon
+        const points = polygon.points
+        const relativeMatrix = getMatrixFromElement(letters, polygon)
+
+        Array(points.length).fill().forEach((v, i) => {
+          const p1 = points[i].matrixTransform(relativeMatrix)
+          const p2 = points[(i + 1) % points.length].matrixTransform(relativeMatrix)
+          const shapeLine = [[p1.x, p1.y], [p2.x, p2.y]]
+
+          if (linesIntersect(mouseLine, shapeLine)) {
+            shape.polygon.style.fill = `hsl(${Math.random() * 255}, 100%, 50%)`
+            shape.angularMomentum += lineLength(mouseLine) * 0.5
+          }
+        })
+      }
+    })
   })
 
+  function update (time) {
+    shapes.forEach(shape => {
+      shape.rotation += shape.angularMomentum
+      shape.angularMomentum *= 0.99
+    })
+  }
+
+  function render (time) {
+    shapes.forEach(shape => {
+      const transform = `rotate(${shape.rotation} ${shape.centroid.x} ${shape.centroid.y})`
+      shape.polygon.setAttribute('transform', transform)
+    })
+  }
+
   function tick (time = 0) {
-    const rotation = time / 10
-    const shape = shapes[0]
-    const transform = `rotate(${rotation} ${shape.centroid.x} ${shape.centroid.y})`
-
-    shape.polygon.setAttribute('transform', transform)
-
-    logo.querySelector('.debug').setAttribute('cx', shape.centroid.x)
-    logo.querySelector('.debug').setAttribute('cy', shape.centroid.y)
-
+    update(time)
+    render(time)
     window.requestAnimationFrame(tick)
   }
 
@@ -168,6 +179,10 @@
     return sum(arr) / arr.length
   }
 
+  function distance (a, b) {
+    return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
+  }
+
   function getPolygonCentroid (polygon) {
     const centroid = logo.createSVGPoint()
     const points = polygon.points
@@ -179,10 +194,4 @@
   function getMatrixFromElement (from, to) {
     return from.getCTM().inverse().multiply(to.getCTM())
   }
-
-  // const polygon = logo.querySelector('#f polygon')
-  // const relativeMatrix = getMatrixFromElement(letters, polygon)
-  // console.log('Original', polygon.points[0])
-  // console.log('Transformed', polygon.points[0].matrixTransform(relativeMatrix))
-  // console.log('Relative', logo.createSVGPoint().matrixTransform(relativeMatrix))
 </script>
