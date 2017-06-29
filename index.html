@@ -75,9 +75,6 @@
     			530.2,293.7'/>
     	</g>
     </g>
-
-    <line class='mouse' stroke='black' x1='0' y1='0' x2='0' y2='0' />
-    <circle class='debug' cx='0' cy='0' r='2' fill='white' />
   </svg>
 </div>
 
@@ -89,7 +86,6 @@
 
   const logo = document.querySelector('#logo')
   const polygons = logo.querySelectorAll('polygon')
-  const mouse = logo.querySelector('.mouse')
   const letters = logo.querySelector('.letters')
 
   const shapes = polygons.map(polygon => {
@@ -124,35 +120,28 @@
 
     const mouseLine = [[p1.x, p1.y], [p2.x, p2.y]]
 
-    mouse.setAttribute('x1', p1.x)
-    mouse.setAttribute('y1', p1.y)
-    mouse.setAttribute('x2', p2.x)
-    mouse.setAttribute('y2', p2.y)
-
     prev.x = current.x
     prev.y = current.y
 
     shapes.forEach(shape => {
-      // if (distance(shape.centroid, p2) < 100) {
-        const mouseLength = lineLength(mouseLine)
-        const mouseAngle = lineAngle(mouseLine)
-        const polygon = shape.polygon
-        const points = polygon.points
-        const relativeMatrix = getMatrixFromElement(letters, polygon)
+      const mouseLength = lineLength(mouseLine)
+      const mouseAngle = lineAngle(mouseLine)
+      const polygon = shape.polygon
+      const points = polygon.points
+      const relativeMatrix = getMatrixFromElement(letters, polygon)
 
-        Array(points.length).fill().forEach((v, i) => {
-          const p1 = points[i].matrixTransform(relativeMatrix)
-          const p2 = points[(i + 1) % points.length].matrixTransform(relativeMatrix)
-          const shapeLine = [[p1.x, p1.y], [p2.x, p2.y]]
+      Array(points.length).fill().forEach((v, i) => {
+        const p1 = points[i].matrixTransform(relativeMatrix)
+        const p2 = points[(i + 1) % points.length].matrixTransform(relativeMatrix)
+        const shapeLine = [[p1.x, p1.y], [p2.x, p2.y]]
 
-          if (linesIntersect(mouseLine, shapeLine)) {
-            shape.polygon.style.fill = `hsl(${Math.random() * 255}, 100%, 50%)`
-            shape.velocity.angle += mouseLength * 0.5
-            shape.velocity.position.x += Math.cos(mouseAngle) * mouseLength * 0.5
-            shape.velocity.position.y += Math.sin(mouseAngle) * mouseLength * 0.5
-          }
-        })
-      // }
+        if (linesIntersect(mouseLine, shapeLine)) {
+          shape.polygon.style.fill = `hsl(${Math.random() * 255}, 100%, 50%)`
+          shape.velocity.angle += mouseLength * 0.5
+          shape.velocity.position.x += Math.cos(mouseAngle) * mouseLength * 0.5
+          shape.velocity.position.y += Math.sin(mouseAngle) * mouseLength * 0.5
+        }
+      })
     })
   })
 
