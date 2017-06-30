@@ -1,3 +1,7 @@
+## Usage
+
+See `build` directory
+
 ## Todo
 
 - [ ] Support touch
