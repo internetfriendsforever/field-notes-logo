@@ -1,0 +1,43 @@
+<script src="adsr-envelope.js"></script>
+
+<script>
+  const context = new AudioContext()
+  const gain = context.createGain()
+
+  const oscillators = ~~(2 + Math.random() * 4)
+
+  const adsr = new ADSREnvelope({
+    "attackTime": 0.01,
+    "decayTime": 0.1 + Math.random() * 0.2,
+    "sustainLevel": 0.1 + Math.random() * 0.2,
+    "releaseTime": 0.1 + Math.random() * 0.4,
+    "gateTime": 0.01,
+    "peakLevel": 1 / oscillators,
+    "epsilon": 0,
+    "attackCurve": "exp",
+    "decayCurve": "lin",
+    "releaseCurve": "exp"
+  })
+
+  Array(oscillators).fill().map((v, i) => {
+    const oscillator = context.createOscillator()
+    const oscgain = context.createGain()
+    const base = 50 + Math.random() * 200
+
+    oscgain.gain.value = Math.random()
+
+    oscillator.frequency.value = base * Math.pow(i, 2)
+    oscillator.type = 'sine'
+    oscillator.connect(oscgain)
+    oscillator.start()
+
+    oscgain.connect(gain)
+  })
+
+  gain.gain.value = 0
+  gain.connect(context.destination)
+
+  setInterval(() => {
+    adsr.applyTo(gain.gain, context.currentTime)
+  }, 60000 / 130)
+</script>

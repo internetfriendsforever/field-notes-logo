@@ -79,6 +79,8 @@
 </div>
 
 <script src="math.js"></script>
+<script src="lib/adsr-envelope.js"></script>
+<script src="createInstrument.js"></script>
 
 <script>
   const context = new window.AudioContext()
@@ -103,40 +105,19 @@
     const points = polygon.points
     const modified = Array.prototype.slice.call(points, 0, -1)
     const string = modified.map(point => [point.x, point.y].join()).join(' ')
-    const oscillator1 = context.createOscillator()
-    const oscillator2 = context.createOscillator()
-    const gain = context.createGain()
-    const panner = context.createStereoPanner()
-
-    const hues = [60, 120, 240]
-    const type = ~~(Math.random() * 4)
-    const frequency = 440 + Math.pow(type * 10, 2)
-    const hue = hues[type % hues.length]
-
-    oscillator1.type = 'sine'
-    oscillator1.frequency.value = frequency
-    oscillator1.connect(gain)
-    oscillator1.start()
-
-    oscillator2.type = 'sine'
-    oscillator2.frequency.value = frequency / 2
-    oscillator2.connect(gain)
-    oscillator2.start()
-
-    gain.connect(panner)
-    gain.gain.value = 0.0
-
-    panner.pan.value = Math.random()
-    panner.connect(convolver)
 
     polygon.setAttribute('points', string)
+
+    const instrument = createInstrument(context)
+
+    console.log(instrument)
+
+    instrument.connect(convolver)
 
     return {
       polygon: polygon,
       centroid: getPolygonCentroid(polygon),
       resting: true,
-      type: type,
-      hue: hue,
       angle: 0,
       lastCollision: 0,
       position: { x: 0, y: 0 },
@@ -144,9 +125,7 @@
         angle: 0,
         position: { x: 0, y: 0 }
       },
-      audio: {
-        gain
-      }
+      instrument: instrument
     }
   })
 
@@ -165,13 +144,10 @@
 
         const movement = getShapeMovement(shape)
         const rest = movement < 0.1
-
-        const gain = shape.audio.gain.gain.value * 0.5
-
-        shape.audio.gain.gain.value = gain
+        const lightness = Math.min(shape.instrument.gain.gain.value * 10000, 50)
 
         if (!rest) {
-          shape.polygon.style.fill = `hsl(${shape.hue}, 100%, ${Math.min(gain * 10000, 50)}%)`
+          shape.polygon.style.fill = `hsl(225, 100%, ${lightness}%)`
           shape.angle += velocity.angle
           shape.position.x += velocity.position.x
           shape.position.y += velocity.position.y
@@ -248,7 +224,12 @@
               shape.velocity.position.x += Math.cos(mouseAngle) * force
               shape.velocity.position.y += Math.sin(mouseAngle) * force
               shape.resting = false
-              shape.audio.gain.gain.value = Math.min(1, getShapeMovement(shape) / 10) * 0.2
+              // shape.audio.gain.gain.value = Math.min(1, getShapeMovement(shape) / 10) * 0.2
+
+              console.log()
+
+              shape.instrument.trigger(force / 10)
+
               start()
             }
           })
