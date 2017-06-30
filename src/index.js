@@ -17,7 +17,7 @@ context.decodeAudioData(echo, buffer => {
   convolver.buffer = buffer
 })
 
-module.exports = function (container) {
+module.exports = function ({ container, hues }) {
   container.innerHTML = svg
 
   const logo = container.querySelector('svg')
@@ -29,6 +29,7 @@ module.exports = function (container) {
 
   const shapes = map(polygons, polygon => {
     const instrument = createInstrument(context)
+    const hue = hues[~~(Math.random() * hues.length)]
 
     instrument.connect(convolver)
 
@@ -36,6 +37,7 @@ module.exports = function (container) {
       polygon: polygon,
       instrument: instrument,
       centroid: math.getPolygonCentroid(polygon),
+      hue: hue,
       resting: true,
       angle: 0,
       lastCollision: 0,

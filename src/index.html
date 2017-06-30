@@ -19,7 +19,18 @@
     <script src="<%= htmlWebpackPlugin.files.chunks[chunk].entry %>"></script>
     <% } %>
     <script>
-      fieldNotesLogo(document.getElementById('logo'))
+      const search = location.search.substring(1)
+
+      const params = search.split('&').filter(v => v).reduce((result, segment, i, arr) => {
+        const [key, value] = segment.split('=')
+        result[decodeURIComponent(key)] = decodeURIComponent(value)
+        return result
+      }, {})
+
+      fieldNotesLogo({
+        container: document.getElementById('logo'),
+        hues: params.hues ? params.hues.split(',') : [235]
+      })
     </script>
   </body>
 </html>

@@ -15,7 +15,7 @@ export default function update (shapes) {
       const lightness = Math.min(shape.instrument.gain.gain.value * 10000, 50)
 
       if (!rest) {
-        shape.polygon.style.fill = `hsl(225, 100%, ${lightness}%)`
+        shape.polygon.style.fill = `hsl(${shape.hue}, 100%, ${lightness}%)`
         shape.angle += velocity.angle
         shape.position.x += velocity.position.x
         shape.position.y += velocity.position.y

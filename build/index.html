@@ -15,11 +15,13 @@
 
   <body>
     <div id="logo"></div>
-    
+
     <script src="fieldNotesLogo.js"></script>
-    
+
     <script>
-      fieldNotesLogo(document.getElementById('logo'))
+      fieldNotesLogo({
+        container: document.getElementById('logo')
+      })
     </script>
   </body>
 </html>
