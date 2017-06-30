@@ -1,4 +1,6 @@
-function createInstrument (context) {
+import ADSREnvelope from 'adsr-envelope'
+
+export default function createInstrument (context) {
   const gain = context.createGain()
   const oscillators = ~~(2 + Math.random() * 4)
 

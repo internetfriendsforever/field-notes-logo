@@ -1,16 +1,16 @@
-function sum (arr) {
+export function sum (arr) {
   return arr.reduce((acc, val) => acc + val, 0)
 }
 
-function average (arr) {
+export function average (arr) {
   return sum(arr) / arr.length
 }
 
-function distance (a, b) {
+export function distance (a, b) {
   return Math.sqrt(Math.pow(a.x - b.x, 2) + Math.pow(a.y - b.y, 2))
 }
 
-function getPolygonCentroid (polygon) {
+export function getPolygonCentroid (polygon) {
   const centroid = { x: 0, y: 0 }
   const points = pointListToArray(polygon.points)
   centroid.x = average(points.map(point => point.x))
@@ -18,25 +18,25 @@ function getPolygonCentroid (polygon) {
   return centroid
 }
 
-function pointListToArray (list) {
+export function pointListToArray (list) {
   return Array(list.numberOfItems).fill().map((v, i) => (
     list.getItem(i)
   ))
 }
 
-function getMatrixFromElement (from, to) {
+export function getMatrixFromElement (from, to) {
   return from.getCTM().inverse().multiply(to.getCTM())
 }
 
-function lineLength ([[x1, y1], [x2, y2]]) {
+export function lineLength ([[x1, y1], [x2, y2]]) {
   return Math.sqrt(Math.pow(x1 - x2, 2) + Math.pow(y1 - y2, 2))
 }
 
-function lineAngle ([[x1, y1], [x2, y2]]) {
+export function lineAngle ([[x1, y1], [x2, y2]]) {
   return Math.atan2(y2 - y1, x2 - x1)
 }
 
-function linesIntersect ([[x1, y1], [x2, y2]], [[x3, y3], [x4, y4]]) {
+export function linesIntersect ([[x1, y1], [x2, y2]], [[x3, y3], [x4, y4]]) {
   const x = ((x1 * y2 - y1 * x2) * (x3 - x4) - (x1 - x2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
   const y = ((x1 * y2 - y1 * x2) * (y3 - y4) - (y1 - y2) * (x3 * y4 - y3 * x4)) / ((x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4))
 
