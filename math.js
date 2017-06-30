@@ -11,11 +11,17 @@ function distance (a, b) {
 }
 
 function getPolygonCentroid (polygon) {
-  const centroid = logo.createSVGPoint()
-  const points = polygon.points
-  centroid.x = average(Array.prototype.map.call(points, point => point.x))
-  centroid.y = average(Array.prototype.map.call(points, point => point.y))
+  const centroid = { x: 0, y: 0 }
+  const points = pointListToArray(polygon.points)
+  centroid.x = average(points.map(point => point.x))
+  centroid.y = average(points.map(point => point.y))
   return centroid
+}
+
+function pointListToArray (list) {
+  return Array(list.numberOfItems).fill().map((v, i) => (
+    list.getItem(i)
+  ))
 }
 
 function getMatrixFromElement (from, to) {
