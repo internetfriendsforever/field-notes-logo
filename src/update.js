@@ -12,7 +12,9 @@ export default function update (shapes) {
       ].map(v => Math.abs(v)))
 
       const rest = movement < 0.1
-      const lightness = Math.min(shape.instrument.gain.gain.value * 10000, 50)
+      const lightness = Math.min(shape.instrument.gain.gain.value * 1e10, 50)
+
+      // const lightness = shape.instrument.gain.gain.value > 1e-8 ? 50 : 0
 
       if (!rest) {
         shape.polygon.style.fill = `hsl(${shape.hue}, 100%, ${lightness}%)`
