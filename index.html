@@ -108,19 +108,8 @@
     const gain = context.createGain()
     const panner = context.createStereoPanner()
 
-    const frequencies = [
-      440,
-      493.8833012561241,
-      554.3652619537442,
-      587.3295358348151,
-      659.2551138257398,
-      739.9888454232688,
-      783.9908719634985
-    ]
-
-    const hues = [0, 60, 240]
+    const hues = [60, 120, 240]
     const type = ~~(Math.random() * 4)
-    // const frequency = frequencies[type]
     const frequency = 440 + Math.pow(type * 10, 2)
     const hue = hues[type % hues.length]
 
