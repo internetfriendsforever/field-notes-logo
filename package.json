@@ -1,6 +1,6 @@
 {
   "scripts": {
-    "start": "./node_modules/.bin/webpack-dev-server",
+    "start": "./node_modules/.bin/webpack-dev-server --host 0.0.0.0 --public 192.168.1.159:8080",
     "build": "NODE_ENV=production webpack -p",
     "deploy": "yarn build && surge ./build -d field-notes-logo.surge.sh"
   },
