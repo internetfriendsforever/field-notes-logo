@@ -2,14 +2,14 @@ import ADSREnvelope from 'adsr-envelope'
 
 export default function createInstrument (context) {
   const gain = context.createGain()
-  const oscillators = ~~(2 + Math.random() * 4)
+  const oscillators = ~~(1 + Math.random() * 2)
 
   const adsr = new ADSREnvelope({
     attackTime: 0.005 + Math.random() * 0.002,
-    decayTime: 0.1 + Math.random() * 0.5,
-    sustainLevel: 0.1 + Math.random() * 0.5,
-    releaseTime: 0.1 + Math.random() * 0.2,
-    gateTime: 0.01,
+    decayTime: 0.2 + Math.random() * 0.5,
+    sustainLevel: 0.0 + Math.random() * 0.5,
+    releaseTime: 0.01 + Math.random() * 0.2,
+    gateTime: 0.02,
     peakLevel: 1 / oscillators,
     epsilon: 0,
     attackCurve: 'exp',
@@ -20,11 +20,11 @@ export default function createInstrument (context) {
   Array(oscillators).fill().map((v, i) => {
     const oscillator = context.createOscillator()
     const oscgain = context.createGain()
-    const base = (80 + Math.random() * 200) + Math.random() * 200
+    const base = 80 + Math.random() * 400
 
-    oscgain.gain.value = Math.random()
+    oscgain.gain.value = 0.2 + Math.random() * 0.8
 
-    oscillator.frequency.value = base * Math.pow(i, 2)
+    oscillator.frequency.value = base * Math.pow(i + 1, 2)
     oscillator.type = 'sine'
     oscillator.connect(oscgain)
     oscillator.start()

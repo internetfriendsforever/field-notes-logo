@@ -4,8 +4,6 @@ See `build` directory
 
 ## Todo
 
-- [ ] Support touch
-- [ ] Test on Android
+- [x] Support touch
+- [x] Test on Android
 - [ ] Test on iOS
-- [ ] Screensaver autoplay version?
-- [ ] Enhance rotation on segments?
