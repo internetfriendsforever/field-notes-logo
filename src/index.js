@@ -52,54 +52,66 @@ module.exports = function ({ container, hues }) {
   })
 
   let ticking = false
-  let mouseLine = null
 
-  const mouseDebug = logo.querySelector('line')
+  const pointer = {
+    current: logo.createSVGPoint(),
+    previous: null
+  }
+
+  const pointerDebug = logo.querySelector('line')
 
   function tick () {
-    if (mouseLine) {
-      mouseDebug.style.visibility = 'visible'
-      mouseDebug.setAttribute('x1', mouseLine[0][0])
-      mouseDebug.setAttribute('y1', mouseLine[0][1])
-      mouseDebug.setAttribute('x2', mouseLine[1][0])
-      mouseDebug.setAttribute('y2', mouseLine[1][1])
-    } else {
-      mouseDebug.style.visibility = 'hidden'
-    }
+    if (pointer.current) {
+      if (pointer.previous) {
+        const pointerLine = [
+          [pointer.previous.x, pointer.previous.y],
+          [pointer.current.x, pointer.current.y]
+        ]
 
-    if (mouseLine) {
-      forEach(shapes, shape => {
-        const mouseLength = math.lineLength(mouseLine)
-        const mouseAngle = math.lineAngle(mouseLine)
-        const polygon = shape.polygon
-        const points = polygon.points
-        const relativeMatrix = math.getMatrixFromElement(letters, polygon)
+        pointerDebug.style.visibility = 'visible'
+        pointerDebug.setAttribute('x1', pointerLine[0][0])
+        pointerDebug.setAttribute('y1', pointerLine[0][1])
+        pointerDebug.setAttribute('x2', pointerLine[1][0])
+        pointerDebug.setAttribute('y2', pointerLine[1][1])
 
-        if (Date.now() - shape.lastCollision < 50) {
-          return
-        }
+        forEach(shapes, shape => {
+          const mouseLength = math.lineLength(pointerLine)
+          const mouseAngle = math.lineAngle(pointerLine)
+          const polygon = shape.polygon
+          const points = polygon.points
+          const relativeMatrix = math.getMatrixFromElement(letters, polygon)
 
-        Array(points.numberOfItems).fill().forEach((v, i) => {
-          const a = points.getItem(i).matrixTransform(relativeMatrix)
-          const b = points.getItem((i + 1) % points.numberOfItems).matrixTransform(relativeMatrix)
-
-          const shapeLine = [[a.x, a.y], [b.x, b.y]]
-
-          if (math.linesIntersect(mouseLine, shapeLine)) {
-            const force = Math.min(Math.pow(mouseLength, 1.2) / 5, 20)
-
-            shape.lastCollision = Date.now()
-            shape.velocity.angle += force
-            shape.velocity.position.x += Math.cos(mouseAngle) * force
-            shape.velocity.position.y += Math.sin(mouseAngle) * force
-            shape.resting = false
-
-            shape.instrument.trigger(force / 10)
-
-            start()
+          if (Date.now() - shape.lastCollision < 50) {
+            return
           }
+
+          Array(points.numberOfItems).fill().forEach((v, i) => {
+            const a = points.getItem(i).matrixTransform(relativeMatrix)
+            const b = points.getItem((i + 1) % points.numberOfItems).matrixTransform(relativeMatrix)
+
+            const shapeLine = [[a.x, a.y], [b.x, b.y]]
+
+            if (math.linesIntersect(pointerLine, shapeLine)) {
+              const force = Math.min(Math.pow(mouseLength, 1.2) / 5, 20)
+
+              shape.lastCollision = Date.now()
+              shape.velocity.angle += force
+              shape.velocity.position.x += Math.cos(mouseAngle) * force
+              shape.velocity.position.y += Math.sin(mouseAngle) * force
+              shape.resting = false
+
+              shape.instrument.trigger(force / 10)
+
+              start()
+            }
+          })
         })
-      })
+      } else {
+        pointer.previous = logo.createSVGPoint()
+      }
+
+      pointer.previous.x = pointer.current.x
+      pointer.previous.y = pointer.current.y
     }
 
     if (shapes.some(shape => !shape.resting)) {
@@ -118,68 +130,69 @@ module.exports = function ({ container, hues }) {
     }
   }
 
-  const onTouchStart = (() => {
-    let ready = false
-    let previous = logo.createSVGPoint()
-    let current = logo.createSVGPoint()
+  function toLocalSVGPoint (global) {
+    const point = logo.createSVGPoint()
+    point.x = global.x
+    point.y = global.y
+    return point.matrixTransform(logo.getScreenCTM().inverse())
+  }
 
-    return e => {
-      e.preventDefault()
+  function onTouchStart (e) {
+    e.preventDefault()
 
-      ready = false
+    pointer.current = null
+    pointer.previous = null
 
-      const onTouchMove = e => {
-        previous.x = current.x
-        previous.y = current.y
-        current.x = e.touches[0].clientX
-        current.y = e.touches[0].clientY
+    function onTouchMove (e) {
+      pointer.current = toLocalSVGPoint({
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      })
 
-        if (ready) {
-          const a = previous.matrixTransform(logo.getScreenCTM().inverse())
-          const b = current.matrixTransform(logo.getScreenCTM().inverse())
-          mouseLine = [[a.x, a.y], [b.x, b.y]]
-          start()
-        }
+      start()
+    }
 
-        ready = true
-      }
+    function onTouchEnd () {
+      document.removeEventListener('touchmove', onTouchMove)
+      document.removeEventListener('touchend', onTouchEnd)
+    }
 
-      const onTouchEnd = () => {
-        mouseLine = null
-        document.removeEventListener('touchmove', onTouchMove)
-        document.removeEventListener('touchend', onTouchEnd)
-      }
-
+    if (e.touches.length === 1) {
       document.addEventListener('touchmove', onTouchMove)
       document.addEventListener('touchend', onTouchEnd)
     }
-  })()
+  }
 
-  const onMouseMove = (() => {
-    let ready = false
-    let previous = logo.createSVGPoint()
-    let current = logo.createSVGPoint()
+  function onMouseMove (e) {
+    pointer.current = toLocalSVGPoint({
+      x: e.clientX,
+      y: e.clientY
+    })
 
-    return e => {
-      previous.x = current.x
-      previous.y = current.y
-      current.x = e.clientX
-      current.y = e.clientY
-
-      if (ready) {
-        const a = previous.matrixTransform(logo.getScreenCTM().inverse())
-        const b = current.matrixTransform(logo.getScreenCTM().inverse())
-        mouseLine = [[a.x, a.y], [b.x, b.y]]
-        start()
-      }
-
-      ready = true
-    }
-  })()
+    start()
+  }
 
   if ('ontouchstart' in window) {
     logo.addEventListener('touchstart', onTouchStart)
   } else {
     logo.addEventListener('mousemove', onMouseMove)
   }
+
+  // iOS enable
+  document.addEventListener('touchstart', () => {
+    const buffer = context.createBuffer(1, 1, 22050)
+    const source = context.createBufferSource()
+
+    source.buffer = buffer
+    source.connect(context.destination)
+    source.start(0)
+
+    window.setTimeout(() => {
+      if ((source.playbackState === source.PLAYING_STATE || source.playbackState === source.FINISHED_STATE)) {
+        document.body.style.background = 'lime'
+      } else {
+        document.body.style.background = 'red'
+      }
+    }, 0)
+  }, false)
 }

@@ -8,7 +8,9 @@ export default function render (shapes) {
     ]
 
     const transform = transforms.join(' ')
+    const lightness = Math.min(shape.instrument.gain.gain.value * 1e12, 50)
 
     shape.polygon.setAttribute('transform', transform)
+    shape.polygon.style.fill = `hsl(${shape.hue}, 100%, ${lightness}%)`
   })
 }
