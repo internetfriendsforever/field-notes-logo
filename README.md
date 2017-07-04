@@ -6,4 +6,4 @@ See `build` directory
 
 - [x] Support touch
 - [x] Test on Android
-- [ ] Test on iOS
+- [x] Test on iOS
