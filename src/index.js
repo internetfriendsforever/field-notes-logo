@@ -1,3 +1,4 @@
+import enableWebAudioIOS from './enableWebAudioIOS'
 import createInstrument from './createInstrument'
 import * as math from './math'
 import update from './update'
@@ -178,21 +179,6 @@ module.exports = function ({ container, hues }) {
     logo.addEventListener('mousemove', onMouseMove)
   }
 
-  // iOS enable
-  document.addEventListener('touchstart', () => {
-    const buffer = context.createBuffer(1, 1, 22050)
-    const source = context.createBufferSource()
-
-    source.buffer = buffer
-    source.connect(context.destination)
-    source.start(0)
-
-    window.setTimeout(() => {
-      if ((source.playbackState === source.PLAYING_STATE || source.playbackState === source.FINISHED_STATE)) {
-        document.body.style.background = 'lime'
-      } else {
-        document.body.style.background = 'red'
-      }
-    }, 0)
-  }, false)
+  // iOS hack fix web audio
+  enableWebAudioIOS(context)
 }
