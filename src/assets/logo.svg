@@ -1,5 +1,5 @@
 <svg version='1.1' viewBox='0 0 640 480'>
-  <line stroke='hsl(235, 50%, 50%)' stroke-width='1' />
+  <line stroke='none' stroke-width='1' />
 
   <g>
    	<g>

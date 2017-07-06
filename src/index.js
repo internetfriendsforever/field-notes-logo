@@ -59,7 +59,9 @@ module.exports = function ({ container, hues }) {
     previous: null
   }
 
-  const pointerDebug = logo.querySelector('line')
+  // Debug pointer
+  // const pointerDebug = logo.querySelector('line')
+  // pointerDebug.style.fill = 'red'
 
   function tick () {
     if (pointer.current) {
@@ -69,11 +71,12 @@ module.exports = function ({ container, hues }) {
           [pointer.current.x, pointer.current.y]
         ]
 
-        pointerDebug.style.visibility = 'visible'
-        pointerDebug.setAttribute('x1', pointerLine[0][0])
-        pointerDebug.setAttribute('y1', pointerLine[0][1])
-        pointerDebug.setAttribute('x2', pointerLine[1][0])
-        pointerDebug.setAttribute('y2', pointerLine[1][1])
+        // Debug pointer
+        // pointerDebug.style.visibility = 'visible'
+        // pointerDebug.setAttribute('x1', pointerLine[0][0])
+        // pointerDebug.setAttribute('y1', pointerLine[0][1])
+        // pointerDebug.setAttribute('x2', pointerLine[1][0])
+        // pointerDebug.setAttribute('y2', pointerLine[1][1])
 
         forEach(shapes, shape => {
           const mouseLength = math.lineLength(pointerLine)
@@ -100,6 +103,7 @@ module.exports = function ({ container, hues }) {
               shape.velocity.position.x += Math.cos(mouseAngle) * force
               shape.velocity.position.y += Math.sin(mouseAngle) * force
               shape.resting = false
+              shape.hitTime = Date.now()
 
               shape.instrument.trigger(force / 10)
 

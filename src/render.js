@@ -8,7 +8,8 @@ export default function render (shapes) {
     ]
 
     const transform = transforms.join(' ')
-    const lightness = Math.min(shape.instrument.gain.gain.value * 1e12, 50)
+    const vibration = (1 - (Date.now() - shape.hitTime) / 100)
+    const lightness = Math.min(50, Math.max(0, vibration * 50))
 
     shape.polygon.setAttribute('transform', transform)
     shape.polygon.style.fill = `hsl(${shape.hue}, 100%, ${lightness}%)`
